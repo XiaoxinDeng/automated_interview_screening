@@ -36,7 +36,7 @@
 
 \begin{document}
 
-\assignmenttitle{Coursework Report: Automated Interview Screening}{Student Name: [Insert Name]\\ CID: [Insert Number]}
+\assignmenttitle{Coursework Report: Automated Interview Screening}{Student Name: Xiaoxin Deng \\ CID: 06046817}
 
 \section{Task 1: Feature Selection and Measurement Critique}
 % Provide your narrative justification for feature selection here. 
@@ -46,6 +46,14 @@
 \section{Task 2: Fairness Metric Selection}
 % Justify your choice of Demographic Parity, Equalized Opportunity, or Equalized Odds. 
 % Discuss how your choice prevents allocative harm and addresses the distribution of errors.
+Equalized Opportunity is chosen as the primary metric. Because it requires equal true positive rate among demographic groups. 
+It is well suited to the hiring context because it directly targets allocative harm. Allocative harm arises when qualified individuals from certain groups are systematically denied beneficial outcomes. By enforcing parity in true positive rates, Equalized Opportunity ensures that candidates who are qualified according to the historical decision label have an equal chance of being correctly selected, regardless of group membership. In this way, the metric prevents situations where one group experiences a higher rate of false negatives (qualified candidates being rejected), which would correspond to unfairly withholding opportunities.
+
+Compared to Demographic Parity, which equalizes overall selection rates across groups, Equalized Opportunity more explicitly addresses the \emph{distribution of errors}. Demographic Parity does not condition on qualification and may therefore encourage accepting unqualified candidates from some groups or rejecting qualified candidates from others in order to match overall rates. In contrast, Equalized Opportunity focuses on a specific and ethically salient error type—false negatives among qualified individuals—making it more appropriate for merit-based decision-making scenarios such as hiring.
+
+Equalized Odds extends this idea by additionally requiring parity in false positive rates, thereby equalizing both types of classification errors across groups. However, this constraint is often difficult to satisfy in practice and can significantly reduce predictive performance, especially when base rates differ between groups. Given these trade-offs, Equalized Opportunity represents a principled balance: it mitigates allocative harm by controlling the most harmful error type in this context, while still allowing flexibility in other parts of the error distribution.
+
+In summary, Equalized Opportunity is chosen because it directly addresses unfair denial of opportunities to qualified candidates and provides a clear, interpretable way to reason about group-wise error distributions in a high-stakes decision-making setting.
 
 \section{Task 3: Baseline Model Comparison}
 % Report the performance and fairness metrics for your baseline models.
@@ -55,9 +63,9 @@
 \toprule
 \textbf{Model} & \textbf{Accuracy} & \textbf{AUC} & \textbf{Fairness Metric Value} \\ 
 \midrule
-Logistic Regression & & & \\ 
-Decision Tree       & & & \\ 
-Neural Network      & & & \\ 
+Logistic Regression & 0.73 & 0.81 & 0.16 \\ 
+Decision Tree       & 0.74 & 0.81 & 0.15 \\ 
+Neural Network      & 0.65 & 0.70 & 0.12 \\ 
 \bottomrule
 \end{tabular}
 \caption{Performance and Fairness Comparison of Baseline Models}
@@ -68,21 +76,25 @@ Neural Network      & & & \\
     \centering
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
-        \fbox{\parbox[c][5cm]{\linewidth}{\centering ROC: Logistic Regression}}
+        % \includegraphics{LR_ROC.png}
+        \includegraphics[width=\linewidth]{LR_ROC.png}
+        % \fbox{\parbox[c][5cm]{\linewidth}{\centering ROC: Logistic Regression}}
         \caption{Logistic Regression}
         \label{fig:roc_lr}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
-        \fbox{\parbox[c][5cm]{\linewidth}{\centering ROC: Decision Tree}}
+        \includegraphics[width=\linewidth]{DT_ROC.png}
+        % \fbox{\parbox[c][5cm]{\linewidth}{\centering ROC: Decision Tree}}
         \caption{Decision Tree}
         \label{fig:roc_dt}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
-        \fbox{\parbox[c][5cm]{\linewidth}{\centering ROC: Neural Network}}
+        \includegraphics[width=\linewidth]{NN_ROC.png}
+        % \fbox{\parbox[c][5cm]{\linewidth}{\centering ROC: Neural Network}}
         \caption{Neural Network}
         \label{fig:roc_nn}
     \end{subfigure}
