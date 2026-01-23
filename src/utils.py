@@ -86,6 +86,24 @@ def preprocess_data(train_df, val_df, test_df, classifier, sensitive_col='is_whi
     ])
     return data, clf
 
+def compute_reweighing_weights(A, y):
+    # A: sensitive attribute array
+    # y: labels array
+
+    weights = np.zeros(len(y))
+
+    for a in np.unique(A):
+        for label in np.unique(y):
+            P_A = np.mean(A == a)
+            P_Y = np.mean(y == label)
+            P_A_Y = np.mean((A == a) & (y == label))
+
+            w = (P_A * P_Y) / P_A_Y
+
+            weights[(A == a) & (y == label)] = w
+
+    return weights
+
 def fairness_metrics(y_true, y_pred, sensitive_attr, *, min_group_size=1):
     """
     Compute DP, EO, and EOD for binary sensitive attribute ∈ {0,1}.
