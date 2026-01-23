@@ -1,4 +1,4 @@
-/tex
+tex/*
 .pyc
-!.pdf
-!.tex
+!/tex/*.pdf
+!/tex/*.tex
