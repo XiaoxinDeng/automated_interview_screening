@@ -1,4 +1,5 @@
 tex/*
-.pyc
+*.pyc
+__pycache__/
 !/tex/*.pdf
 !/tex/*.tex
