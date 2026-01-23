@@ -43,6 +43,28 @@
 % Focus on the principles of measurement theory: reliability and validity. 
 % Discuss the validity of using proxy measurements like ZIP codes or grammar choices.
 
+In this task, we critically evaluate the selected features through the lens of \emph{measurement theory}, focusing on the reliability and validity of each attribute. Since the dataset involves hiring decisions that directly affect individuals’ access to opportunities, it is essential to assess whether the chosen features constitute appropriate and fair measurements of the underlying constructs they are intended to represent.
+
+\paragraph{Reliability of measurements.}
+Reliability concerns the consistency of a measurement under repeated or similar conditions. Several attributes in the dataset, such as \texttt{Age} and \texttt{Hours Per Week}, are relatively reliable, as they are objectively defined and unlikely to vary substantially if measured again. Demographic attributes including \texttt{Sex}, \texttt{Race}, and \texttt{Place Of Birth} are also generally stable, although their reliability may be affected by misreporting or ambiguous category definitions.
+
+In contrast, features derived from human judgement—namely \texttt{interview score} and \texttt{cv assessment score}—are less reliable. These scores depend on the subjective evaluations of interviewers or assessors and may vary significantly across evaluators, contexts, or time. As a result, the same candidate could plausibly receive different scores under identical conditions, indicating limited measurement reliability.
+
+Categorical socio-economic features such as \texttt{Workclass}, \texttt{Education}, \texttt{Occupation}, \texttt{Marital Status}, and \texttt{Relationship} are typically stable at the time of collection, but their reliability depends on accurate self-reporting and consistent categorization. Ambiguity in category boundaries or inconsistent reporting can introduce noise into the data.
+
+\paragraph{Validity of measurements.}
+Validity refers to whether a feature accurately captures the construct it is intended to measure. Several features in the dataset raise important validity concerns. For example, \texttt{Education} and \texttt{Occupation} are often used as indicators of skill or competence, yet they also reflect access to educational opportunities, labour market structures, and historical inequalities. As such, they may be only weakly valid measures of intrinsic ability or future job performance.
+
+Similarly, \texttt{Hours\_Per\_Week} measures time spent working rather than productivity or effectiveness, limiting its validity as a proxy for candidate quality. Human-judgement-based features such as \texttt{interview\_score} and \texttt{cv\_assessment\_score} are intended to summarise candidate suitability, but they may instead capture assessor preferences, cultural norms, or implicit biases. This raises the risk that these scores encode subjective or socially conditioned factors rather than job-relevant competence.
+
+The target variable, \texttt{prior\_hiring\_decision}, also warrants scrutiny. As a historical hiring outcome, it reflects past human decisions and organisational practices, which may themselves be biased. Consequently, it is an imperfect proxy for true candidate suitability and may propagate existing unfairness when used as a ground-truth label.
+
+\paragraph{Proxy measurements and sensitive attributes.}
+Several features in the dataset may function as \emph{proxy measurements} for sensitive attributes. For instance, \texttt{Place\_Of\_Birth} and \texttt{Race} are closely related and may encode similar demographic information. Even if explicit sensitive attributes were removed, correlated features such as \texttt{Education}, \texttt{Occupation}, or linguistic signals in CV assessments could allow the model to infer group membership indirectly. This undermines the notion of fairness through unawareness and highlights how discrimination can arise even without explicit use of protected attributes.
+
+\paragraph{Summary.}
+Overall, the dataset contains a mixture of relatively reliable but potentially invalid measurements, as well as subjective features with limited reliability. Many attributes are only indirect proxies for the constructs of interest and may encode historical or societal biases. These measurement issues imply that unfairness may originate from the data itself, independently of the learning algorithm, underscoring the importance of careful feature selection and critical evaluation in fairness-sensitive applications such as hiring.
+
 \section{Task 2: Fairness Metric Selection}
 % Justify your choice of Demographic Parity, Equalized Opportunity, or Equalized Odds. 
 % Discuss how your choice prevents allocative harm and addresses the distribution of errors.
@@ -57,6 +79,11 @@ In summary, Equalized Opportunity is chosen because it directly addresses unfair
 
 \section{Task 3: Baseline Model Comparison}
 % Report the performance and fairness metrics for your baseline models.
+Logistic Regression and the Decision Tree achieve comparable performance, with accuracies of 0.73 and 0.74 respectively, and identical AUC values of 0.81, indicating similar discriminative ability. 
+While Neural Network has the lowest effectiveness in terms of accuracy (0.65) and AUC (0.70). However, it achieves the best fairness metric value (Equalized Opportunity difference 0.12), indicating that the Neural Network is the fairest model among the three baseline models by sacrificing its accuracy and AUC.
+
+This highlights a clear performance-fairness trade-off: models with stronger predictive performance tend to exhibit greater disparity across demographic groups, whereas the Neural Network sacrifices accuracy and discriminative power in exchange for improved fairness.
+
 \begin{table}[h]
 \centering
 \begin{tabular}{lccc}
