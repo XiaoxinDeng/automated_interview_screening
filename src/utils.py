@@ -243,37 +243,28 @@ def plot_roc_curve(y_val, y_score, sensitive_attr=None, title="ROC Curve"):
     plt.show()
 
 
+def post_process_mitigation(y_pred_proba, sensitive_val, tau_a=0.5, tau_b=0.5):
+    """
+    Apply different thresholds for different groups to mitigate bias.
+    """
+    y_pred_post_process = np.where(
+        (sensitive_val == 0) & (y_pred_proba >= tau_a) |
+        (sensitive_val == 1) & (y_pred_proba >= tau_b),
+        1,
+        0
+    )
+    return y_pred_post_process
 
-# def plot_groupwise_roc(y_true, y_score, is_white):
-#     """
-#     Plot ROC curves separately for A=0 and A=1 (is_white).
-#     """
-#     y_true = np.asarray(y_true).reshape(-1)
-#     y_score = np.asarray(y_score).reshape(-1)
-#     A = np.asarray(is_white).reshape(-1)
-
-#     plt.figure(figsize=(6, 5))
-
-#     for a, label in [(0, "Non-white (A=0)"), (1, "White (A=1)")]:
-#         mask = (A == a)
-#         if np.sum(mask) == 0:
-#             continue
-
-#         fpr, tpr, _ = roc_curve(y_true[mask], y_score[mask])
-#         roc_auc = auc(fpr, tpr)
-
-#         plt.plot(fpr, tpr, lw=2, label=f"{label} | AUC={roc_auc:.3f}")
-    
-#     fpr, tpr, _ = roc_curve(y_true, y_score)
-#     roc_auc = auc(fpr, tpr)
-#     plt.plot(fpr, tpr, lw=2, label=f"Overall | AUC={roc_auc:.3f}")
-
-#     plt.plot([0, 1], [0, 1], linestyle="--", color="gray")
-#     plt.xlabel("False Positive Rate")
-#     plt.ylabel("True Positive Rate")
-#     plt.title("Group-wise ROC Curves by Sensitive Attribute")
-#     plt.legend(loc="lower right")
-#     plt.grid(True)
-#     plt.tight_layout()
-#     plt.show()
-
+def thresholds_for_target_tpr(y_val, y_pred_proba, sensitive_attr, target_tpr=0.8):
+    """
+    Compute thresholds for each group to achieve target TPR (Equal Opportunity).
+    """
+    pos = (y_val == 1)
+    sa = y_pred_proba[pos & (sensitive_attr == 0)]
+    sb = y_pred_proba[pos & (sensitive_attr != 0)]
+    if len(sa) == 0 or len(sb) == 0:
+        raise ValueError("One group has no positive samples in validation; cannot enforce equal opportunity.")
+    target_tpr = max(0.0, min(1.0, target_tpr))  # clamp to [0, 1]
+    tau_a = np.quantile(sa, 1 - target_tpr)
+    tau_b = np.quantile(sb, 1 - target_tpr)
+    return float(tau_a), float(tau_b)
