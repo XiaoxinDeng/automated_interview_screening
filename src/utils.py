@@ -60,8 +60,12 @@ def preprocess_data(train_df, val_df, test_df, classifier, sensitive_col='is_whi
 
     data['X_val'] = val_df[features]
     data['y_val'] = val_df[target]
+
+    data['X_test'] = test_df[features]
+    data['y_test'] = test_df[target]
     # CRITICAL: We Keep 'is_white' (sensitive_attribute) separate for the Fairness Evaluation later.
     data['sensitive_val'] = val_df[sensitive_col]
+    data['sensitive_test'] = test_df[sensitive_col]
 
     # Identify Numerical vs Categorical columns for different preprocessing
     # Explicitly define categorical columns since they are integer-encoded in ACS data
@@ -261,10 +265,68 @@ def thresholds_for_target_tpr(y_val, y_pred_proba, sensitive_attr, target_tpr=0.
     """
     pos = (y_val == 1)
     sa = y_pred_proba[pos & (sensitive_attr == 0)]
-    sb = y_pred_proba[pos & (sensitive_attr != 0)]
+    sb = y_pred_proba[pos & (sensitive_attr == 1)]
     if len(sa) == 0 or len(sb) == 0:
         raise ValueError("One group has no positive samples in validation; cannot enforce equal opportunity.")
     target_tpr = max(0.0, min(1.0, target_tpr))  # clamp to [0, 1]
-    tau_a = np.quantile(sa, 1 - target_tpr)
-    tau_b = np.quantile(sb, 1 - target_tpr)
+    tau_a = np.quantile(sa, 1 - target_tpr, method='higher')
+    tau_b = np.quantile(sb, 1 - target_tpr, method='higher')
     return float(tau_a), float(tau_b)
+
+def group_tpr(y_true, y_pred, sensitive_attr, group_value):
+    mask = (sensitive_attr == group_value) & (y_true == 1)
+    if mask.sum() == 0:
+        return np.nan
+    return (y_pred[mask] == 1).mean()
+
+def plot_attribute_on_thresholds(tau_a, tau_b, target_grid, target_attr_name=""):
+    fig, ax = plt.subplots(figsize=(7, 6))
+
+    im = ax.imshow(
+        target_grid,
+        origin="lower",   # (0,0) at bottom-left
+        aspect="auto"
+    )
+
+    ax.set_xlabel(r"$\tau_b$")
+    ax.set_ylabel(r"$\tau_a$")
+
+    # Sparse ticks for readability
+    step_a = max(1, len(tau_a) // 6)
+    step_b = max(1, len(tau_b) // 6)
+
+    ax.set_yticks(np.arange(0, len(tau_a), step_a))
+    ax.set_xticks(np.arange(0, len(tau_b), step_b))
+    ax.set_yticklabels(np.round(tau_a[::step_a], 2))
+    ax.set_xticklabels(np.round(tau_b[::step_b], 2))
+
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label(target_attr_name)
+
+    plt.title(f"{target_attr_name} Heatmap over $(\\tau_a, \\tau_b)$")
+    plt.tight_layout()
+    plt.show()
+    
+def plot_tradeoff(acc_grid, eo_grid, baseline_acc=None, baseline_eo=None):
+    acc = np.asarray(acc_grid).ravel()
+    eo  = np.asarray(eo_grid).ravel()
+
+    # drop NaNs if any
+    m = np.isfinite(acc) & np.isfinite(eo)
+    acc, eo = acc[m], eo[m]
+
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.scatter(eo, acc, s=10)
+
+    ax.set_xlabel("EO gap  $|TPR_1-TPR_0|$")
+    ax.set_ylabel("Accuracy")
+    ax.set_title("Accuracy–Fairness Trade-off (Post-processing thresholds)")
+    ax.grid(True)
+
+    # mark baseline (optional)
+    if baseline_acc is not None and baseline_eo is not None:
+        ax.scatter([baseline_eo], [baseline_acc], s=80, marker="X")
+        ax.annotate("baseline", (baseline_eo, baseline_acc), textcoords="offset points", xytext=(6, 6))
+
+    plt.tight_layout()
+    plt.show()
